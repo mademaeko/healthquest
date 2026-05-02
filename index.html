@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HealthQuest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0f0d">
+<meta name="application-name" content="HealthQuest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<title>HealthQuest</title>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#0a0f0d;--bg2:#111a16;--bg3:#1a2b23;--bg4:#243a30;
+--green:#00e676;--green2:#69f0ae;--green3:#1b4332;--green4:#2d6a4f;
+--gold:#ffd600;--gold2:#ffab00;--orange:#ff6d00;--red:#ff1744;
+--blue:#448aff;--purple:#b388ff;--cyan:#18ffff;
+--text:#e0e0e0;--text2:#9e9e9e;--text3:#616161;
+--border:#2a3d33;
+--safe-bottom:env(safe-area-inset-bottom,0px);
+--safe-top:env(safe-area-inset-top,0px);
+}
+html,body{overscroll-behavior:none}
+body{font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;overflow-x:hidden;padding-bottom:calc(72px + var(--safe-bottom))}
+
+/* TOP BAR */
+.topbar{position:fixed;top:0;left:0;right:0;padding-top:var(--safe-top);background:var(--bg2);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;height:calc(56px + var(--safe-top));padding-left:16px;padding-right:16px}
+.topbar-title{font-size:18px;font-weight:800;color:var(--green)}
+.topbar-title span{color:var(--gold)}
+.topbar-streak{margin-left:auto;font-size:13px;font-weight:700;color:var(--orange)}
+.topbar-level{font-size:12px;font-weight:700;color:var(--gold);margin-left:12px;background:var(--bg3);padding:4px 10px;border-radius:6px}
+
+/* BOTTOM NAV */
+.bottomnav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:var(--safe-bottom);height:calc(72px + var(--safe-bottom))}
+.bottomnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;cursor:pointer;transition:all .15s;position:relative;-webkit-tap-highlight-color:transparent}
+.bottomnav-item:active{transform:scale(.92)}
+.bottomnav-icon{font-size:22px;line-height:1;margin-bottom:2px}
+.bottomnav-label{font-size:9px;font-weight:600;color:var(--text3);letter-spacing:.3px}
+.bottomnav-item.active .bottomnav-label{color:var(--green)}
+.bottomnav-item.active::before{content:'';position:absolute;top:0;left:25%;right:25%;height:2px;background:var(--green);border-radius:0 0 2px 2px}
+
+/* MAIN */
+.main{margin-top:calc(56px + var(--safe-top));padding:16px;max-width:600px;margin-left:auto;margin-right:auto}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-subtitle{font-size:12px;color:var(--text2);font-weight:400;margin-left:auto}
+
+/* XP BAR */
+.xp-hero{text-align:center;padding:24px 20px}
+.xp-level{font-size:48px;font-weight:900;color:var(--gold);text-shadow:0 0 30px rgba(255,214,0,.2);line-height:1}
+.xp-rank{font-size:14px;color:var(--text2);margin-top:4px;font-weight:600}
+.xp-bar-wrap{margin-top:16px}
+.xp-bar-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px}
+.xp-bar-bg{width:100%;height:12px;background:var(--bg);border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--green3),var(--green));border-radius:6px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--bg3);border-radius:12px;padding:14px 8px;text-align:center}
+.stat-val{font-size:24px;font-weight:800}
+.stat-val.g{color:var(--green)}.stat-val.o{color:var(--gold)}.stat-val.b{color:var(--blue)}
+.stat-val.p{color:var(--purple)}.stat-val.c{color:var(--cyan)}
+.stat-lbl{font-size:10px;color:var(--text2);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+/* HABITS */
+.habit{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none}
+.habit:active{transform:scale(.98)}
+.habit.done{border-color:var(--green4);background:rgba(0,230,118,.06)}
+.habit-chk{width:32px;height:32px;border-radius:10px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;flex-shrink:0}
+.habit.done .habit-chk{background:var(--green);border-color:var(--green);color:var(--bg)}
+.habit-info{flex:1;min-width:0}
+.habit-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.habit-desc{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.habit-xp{font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap;flex-shrink:0}
+
+/* ACHIEVEMENTS */
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ach{padding:14px 8px;border-radius:12px;background:var(--bg);border:1px solid var(--border);text-align:center;transition:all .3s;overflow:hidden}
+.ach.unlocked{border-color:var(--gold);background:rgba(255,214,0,.04)}
+.ach-ico{font-size:32px;filter:grayscale(1) opacity(.25)}.ach.unlocked .ach-ico{filter:none}
+.ach-nm{font-size:11px;font-weight:700;margin-top:6px;line-height:1.2}
+.ach-ds{font-size:9px;color:var(--text3);margin-top:3px;line-height:1.3}
+.ach-dt{font-size:9px;color:var(--gold);margin-top:4px;font-weight:600}
+
+/* CHART */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-lbl{width:36px;font-size:12px;color:var(--text2);text-align:right;flex-shrink:0;font-weight:600}
+.bar-bg{flex:1;height:24px;background:var(--bg);border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;transition:width .5s ease}
+.bar-val{width:24px;font-size:13px;font-weight:700}
+
+/* INPUTS */
+.inp-group{margin-bottom:14px}
+.inp-group label{display:block;font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.inp-group input,.inp-group select,.inp-group textarea{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;font-family:inherit;-webkit-appearance:none}
+.inp-group input:focus,.inp-group select:focus,.inp-group textarea:focus{outline:none;border-color:var(--green)}
+.inp-group textarea{resize:vertical;min-height:70px;font-size:15px}
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* BUTTONS */
+.btn{padding:14px 24px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;width:100%;display:block;text-align:center;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--green);color:var(--bg)}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-gold{background:var(--gold);color:var(--bg)}
+.btn-sm{padding:10px 16px;font-size:13px;width:auto;display:inline-block}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn-row .btn{flex:1;min-width:0}
+
+/* RATING */
+.rating{display:flex;gap:6px;flex-wrap:wrap}
+.rating-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-weight:700;cursor:pointer;transition:all .15s;font-size:15px}
+.rating-btn:active{transform:scale(.9)}
+.rating-btn.selected{background:var(--green);color:var(--bg);border-color:var(--green)}
+
+/* DATE NAV */
+.date-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;justify-content:center}
+.date-nav button{background:var(--bg3);border:1px solid var(--border);color:var(--text);width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:18px}
+.date-nav button:active{background:var(--bg4)}
+.date-display{font-size:14px;font-weight:700;color:var(--green2);text-align:center;min-width:0;flex-shrink:1}
+.today-tag{font-size:10px;background:var(--green);color:var(--bg);padding:3px 8px;border-radius:5px;font-weight:700;flex-shrink:0}
+
+/* TABLE */
+.log-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+.log-table th{background:var(--bg3);padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap}
+.log-table td{padding:10px 8px;border-bottom:1px solid var(--border);font-size:13px}
+.log-table tr:active td{background:var(--bg3)}
+
+/* GUIDE */
+.guide-section{margin-bottom:16px}
+.guide-section h3{font-size:15px;color:var(--green);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.guide-section p{font-size:14px;line-height:1.7;color:var(--text2);margin-bottom:10px}
+.guide-section ul{margin:8px 0 14px 18px;color:var(--text2);font-size:13px;line-height:1.8}
+.guide-tip{background:var(--bg3);border-left:3px solid var(--green);padding:12px 14px;border-radius:0 10px 10px 0;margin:10px 0;font-size:13px;color:var(--text2);line-height:1.6}
+
+/* RECIPE CARDS */
+.recipe{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;border-left:3px solid var(--green)}
+.recipe-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.recipe-name{font-weight:700;font-size:14px}
+.recipe-tag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--bg3)}
+.recipe-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.recipe-time{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* MEAL TABLE */
+.meal-row{display:flex;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);align-items:center}
+.meal-day{font-weight:700;font-size:13px;width:36px;flex-shrink:0;color:var(--green2)}
+.meal-inputs{flex:1;display:flex;flex-direction:column;gap:4px}
+.meal-input{background:transparent;border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:13px;font-family:inherit;width:100%}
+.meal-input:focus{outline:none;border-color:var(--green)}
+.meal-input::placeholder{color:var(--text3);font-size:12px}
+
+/* POPUPS */
+.xp-popup{position:fixed;top:calc(64px + var(--safe-top));right:16px;background:var(--bg2);border:2px solid var(--gold);border-radius:12px;padding:10px 18px;font-weight:700;color:var(--gold);font-size:16px;z-index:200;animation:popIn .3s ease,popOut .3s ease 1.2s forwards;pointer-events:none}
+@keyframes popIn{from{opacity:0;transform:translateY(-16px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes popOut{from{opacity:1}to{opacity:0;transform:translateY(-16px)}}
+.toast{position:fixed;bottom:calc(80px + var(--safe-bottom));left:16px;right:16px;background:var(--green3);border:1px solid var(--green);color:var(--green2);padding:14px 20px;border-radius:14px;font-size:14px;font-weight:600;z-index:300;text-align:center;animation:slideUp .3s ease;display:none}
+.toast.show{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* SCROLL HORIZONTAL HELPER */
+.h-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
+.h-scroll::-webkit-scrollbar{display:none}
+
+/* PSL */
+.psl-score-display{text-align:center;padding:20px 0}
+.psl-score-big{font-size:64px;font-weight:900;line-height:1}
+.psl-score-label{font-size:14px;color:var(--text2);margin-top:4px}
+.psl-tier{display:inline-block;padding:4px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-top:8px}
+.psl-category{margin-bottom:16px}
+.psl-cat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.psl-cat-name{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+.psl-cat-score{font-size:13px;font-weight:700}
+.psl-q{margin-bottom:12px}
+.psl-q-label{font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text)}
+.psl-q-desc{font-size:11px;color:var(--text3);margin-bottom:6px;line-height:1.4}
+.psl-opts{display:flex;gap:4px;flex-wrap:wrap}
+.psl-opt{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;flex:1;text-align:center;min-width:0}
+.psl-opt:active{transform:scale(.95)}
+.psl-opt.sel{background:var(--green);color:var(--bg);border-color:var(--green)}
+.psl-meter{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:4px}
+.psl-meter-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.psl-improve{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px}
+.psl-improve-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.psl-improve-pri{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase}
+.psl-improve-title{font-size:14px;font-weight:700}
+.psl-improve-body{font-size:13px;color:var(--text2);line-height:1.6}
+.psl-history-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.psl-history-date{font-size:13px;color:var(--text2)}
+.psl-history-score{font-size:18px;font-weight:800}
+
+/* DESKTOP */
+@media(min-width:700px){
+  .main{max-width:600px;padding:20px}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
+  .ach-grid{grid-template-columns:repeat(4,1fr)}
+  .bottomnav{max-width:600px;left:50%;transform:translateX(-50%);border-radius:16px 16px 0 0;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">Health<span>Quest</span></div>
+  <div class="topbar-streak" id="topStreak">🔥 0</div>
+  <div class="topbar-level" id="topLevel">Lv.1</div>
+</div>
+
+<div class="main" id="app"></div>
+
+<nav class="bottomnav" id="bottomNav"></nav>
+<div class="toast" id="toast"></div>
+
+<script>
+// ====== DATA ======
+const SK='healthquest_v3';
+const TODAY=()=>new Date().toISOString().slice(0,10);
+const LEVELS=[
+  {n:'Novice',x:0},{n:'Beginner',x:200},{n:'Apprentice',x:500},{n:'Warrior',x:1000},
+  {n:'Champion',x:2000},{n:'Elite',x:3500},{n:'Master',x:5500},{n:'Grandmaster',x:8000},
+  {n:'Legend',x:12000},{n:'Mythic',x:18000},{n:'Transcendent',x:25000}
+];
+const DEFAULT_HABITS=[
+  {id:'water',name:'Hydrate (80+ oz)',desc:'Drink water throughout the day',xp:15,icon:'💧'},
+  {id:'no_alcohol',name:'Alcohol-Free Day',desc:'Stay strong on your sobriety journey',xp:25,icon:'🛡️'},
+  {id:'sunlight',name:'Morning Sunlight',desc:'10+ min outside within first hour',xp:15,icon:'☀️'},
+  {id:'exercise',name:'Exercise / Gym',desc:'Walk, gym, stretch — any movement',xp:30,icon:'💪'},
+  {id:'home_meal',name:'Home-Cooked Meal',desc:'Cook at least one meal today',xp:20,icon:'🍳'},
+  {id:'skincare_am',name:'Morning Skincare',desc:'Cleanse, treat, moisturize, SPF',xp:10,icon:'✨'},
+  {id:'skincare_pm',name:'Evening Skincare',desc:'Cleanse, treat, moisturize',xp:10,icon:'🌙'},
+  {id:'supplements',name:'Supplements Taken',desc:'Take your daily supplement stack',xp:15,icon:'💊'},
+  {id:'sleep_quality',name:'Good Sleep (7-9 hrs)',desc:'Quality rest, consistent schedule',xp:20,icon:'😴'},
+  {id:'no_doorDash',name:'No DoorDash Today',desc:'Save money, eat cleaner',xp:20,icon:'🚫'},
+  {id:'cold_water_face',name:'Face De-Bloat Routine',desc:'Cold water + lymphatic massage',xp:10,icon:'🧊'},
+  {id:'protein_breakfast',name:'Protein Breakfast',desc:'Eggs, smoothie, or oats within 90 min',xp:15,icon:'🥚'},
+];
+function getHabits(){return D.customHabits||DEFAULT_HABITS}
+const ACHS=[
+  {id:'first_day',n:'Day One',d:'Complete your first check-in',i:'🌱',c:s=>s.tl>=1},
+  {id:'week_one',n:'Full Week',d:'Log habits for 7 days',i:'📅',c:s=>s.tl>=7},
+  {id:'month_one',n:'30 Day Warrior',d:'Log for 30 days',i:'⚔️',c:s=>s.tl>=30},
+  {id:'streak_3',n:'On Fire',d:'3-day streak',i:'🔥',c:s=>s.bs>=3},
+  {id:'streak_7',n:'Unstoppable',d:'7-day streak',i:'💥',c:s=>s.bs>=7},
+  {id:'streak_14',n:'Two Weeks Strong',d:'14-day streak',i:'⚡',c:s=>s.bs>=14},
+  {id:'streak_30',n:'Legendary Streak',d:'30-day streak',i:'👑',c:s=>s.bs>=30},
+  {id:'sober_7',n:'Clear Mind',d:'7 days alcohol-free',i:'🧠',c:s=>s.sd>=7},
+  {id:'sober_30',n:'Sober Month',d:'30 days sober',i:'🏆',c:s=>s.sd>=30},
+  {id:'sober_90',n:'Quarter Year Clean',d:'90 days sober',i:'💎',c:s=>s.sd>=90},
+  {id:'gym_10',n:'Gym Rat',d:'10 gym sessions',i:'🏋️',c:s=>s.gs>=10},
+  {id:'gym_30',n:'Iron Addict',d:'30 gym sessions',i:'🦾',c:s=>s.gs>=30},
+  {id:'cook_20',n:'Home Chef',d:'20 home meals',i:'👨‍🍳',c:s=>s.hm>=20},
+  {id:'cook_50',n:'Master Chef',d:'50 home meals',i:'🍽️',c:s=>s.hm>=50},
+  {id:'perfect_day',n:'Perfect Day',d:'All habits in one day',i:'⭐',c:s=>s.pd>=1},
+  {id:'perfect_week',n:'Perfect Week',d:'7 perfect days straight',i:'🌟',c:s=>s.ps>=7},
+  {id:'level_5',n:'Getting Serious',d:'Reach Level 5',i:'🎖️',c:s=>s.lv>=5},
+  {id:'level_8',n:'Grandmaster',d:'Reach Level 8',i:'🏅',c:s=>s.lv>=8},
+  {id:'first_checkin',n:'Self-Aware',d:'First weekly check-in',i:'📊',c:s=>s.wc>=1},
+  {id:'first_workout',n:'Logged & Loaded',d:'First gym workout',i:'📝',c:s=>s.gs>=1},
+];
+
+function load(){try{const r=localStorage.getItem(SK);return r?JSON.parse(r):{xp:0,days:{},gym:[],wk:[],ach:{},sd:'2026-03-25',sel:TODAY(),mp:{}}}catch(e){return{xp:0,days:{},gym:[],wk:[],ach:{},sd:'2026-03-25',sel:TODAY(),mp:{}}}}
+function save(){localStorage.setItem(SK,JSON.stringify(D))}
+// Migrate from v2
+(function migrate(){try{const v2=localStorage.getItem('healthquest_v2');if(v2&&!localStorage.getItem(SK)){const o=JSON.parse(v2);const n={xp:o.xp||0,days:o.days||{},gym:o.gymLog||[],wk:o.weeklyCheckins||[],ach:o.achievements||{},sd:o.startDate||'2026-03-25',sel:o.selectedDate||TODAY(),mp:o.mealPlan||{}};localStorage.setItem(SK,JSON.stringify(n))}}catch(e){}})();
+let D=load();
+
+function getDay(d){if(!D.days[d])D.days[d]={h:{},s:{},notes:''};return D.days[d]}
+
+function stats(){
+  const days=Object.keys(D.days);
+  let tl=days.filter(d=>{const h=D.days[d].h;return h&&Object.values(h).some(v=>v)}).length;
+  let sd=0,cs=0,bs=0,pd=0,ps=0,cp=0,hm=0,gs=0;
+  const start=new Date(D.sd||'2026-03-25'),today=new Date(TODAY());
+  const diff=Math.floor((today-start)/864e5)+1;
+  let allSober=true;
+  for(let i=0;i<diff;i++){
+    const dt=new Date(start);dt.setDate(dt.getDate()+i);
+    const ds=dt.toISOString().slice(0,10),day=D.days[ds];
+    if(day&&day.h&&day.h.no_alcohol===false){allSober=false;sd=0}
+    else if(allSober||(day&&day.h&&day.h.no_alcohol)){sd++}
+  }
+  let prev=null;
+  days.sort().forEach(ds=>{
+    const day=D.days[ds];if(!day.h)return;
+    const done=Object.values(day.h).filter(v=>v).length;
+    if(done>0){
+      if(prev){const df=(new Date(ds)-new Date(prev))/864e5;if(df===1)cs++;else cs=1}else cs=1;
+      bs=Math.max(bs,cs);prev=ds;
+    }
+    if(done===getHabits().length){pd++;cp++;ps=Math.max(ps,cp)}else cp=0;
+    if(day.h.home_meal)hm++;if(day.h.exercise)gs++;
+  });
+  gs+=D.gym.length;
+  const lv=LEVELS.reduce((l,v,i)=>D.xp>=v.x?i:l,0);
+  return{tl,sd,cs,bs,pd,ps,hm,gs,lv,wc:D.wk.length}
+}
+
+function addXP(n){
+  const ol=LEVELS.reduce((l,v,i)=>D.xp>=v.x?i:l,0);
+  D.xp+=n;
+  const nl=LEVELS.reduce((l,v,i)=>D.xp>=v.x?i:l,0);
+  save();updateTopBar();
+  if(nl>ol)toast(`🎉 LEVEL UP! You're now a ${LEVELS[nl].n}!`);
+  xpPop(`+${n} XP`);
+}
+
+function xpPop(t){const e=document.createElement('div');e.className='xp-popup';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),1800)}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000)}
+function fmtDate(ds){return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+function fmtDateLong(ds){return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
+
+// ====== NAV ======
+const TABS=[
+  {id:'home',icon:'🏠',label:'Home'},
+  {id:'habits',icon:'✅',label:'Habits'},
+  {id:'psl',icon:'👤',label:'PSL'},
+  {id:'gym',icon:'💪',label:'Gym'},
+  {id:'more',icon:'⋯',label:'More'},
+];
+let page='home',subpage='';
+
+function renderNav(){
+  const morePages=['supplements','checkin','achievements','guide','meals'];
+  document.getElementById('bottomNav').innerHTML=TABS.map(t=>
+    `<div class="bottomnav-item ${page===t.id||(morePages.includes(page)&&t.id==='more')?'active':''}" onclick="nav('${t.id}')">
+      <div class="bottomnav-icon">${t.icon}</div>
+      <div class="bottomnav-label">${t.label}</div>
+    </div>`
+  ).join('');
+}
+
+function updateTopBar(){
+  const s=stats();
+  document.getElementById('topStreak').textContent=`🔥 ${s.cs}`;
+  document.getElementById('topLevel').textContent=`Lv.${s.lv+1} ${LEVELS[s.lv].n}`;
+}
+
+function nav(p){
+  if(p==='more'&&page!=='more'){page='more';subpage=''}
+  else page=p;
+  renderNav();render();window.scrollTo(0,0);
+}
+
+function render(){
+  const app=document.getElementById('app');
+  switch(page){
+    case 'home':app.innerHTML=pgHome();break;
+    case 'habits':app.innerHTML=pgHabits();bindH();break;
+    case 'meals':app.innerHTML=pgMeals();break;
+    case 'gym':app.innerHTML=pgGym();break;
+    case 'psl':app.innerHTML=pgPSL();bindPSL();break;
+    case 'supplements':app.innerHTML=pgSupps();bindS();break;
+    case 'checkin':app.innerHTML=pgCheckin();break;
+    case 'achievements':app.innerHTML=pgAch();break;
+    case 'guide':app.innerHTML=pgGuide();break;
+    case 'more':app.innerHTML=pgMore();break;
+  }
+  updateTopBar();checkAch();
+}
+
+// ====== HOME ======
+function pgHome(){
+  const s=stats(),lv=s.lv;
+  const cx=LEVELS[lv].x,nx=lv<LEVELS.length-1?LEVELS[lv+1].x:LEVELS[lv].x;
+  const inLv=D.xp-cx,need=nx-cx,pct=need>0?Math.min(inLv/need*100,100):100;
+  const day=getDay(TODAY()),tc=day.h?Object.values(day.h).filter(v=>v).length:0;
+  const ds=Math.floor((new Date(TODAY())-new Date(D.sd||'2026-03-25'))/864e5)+1;
+  const ua=Object.keys(D.ach).length;
+  return `
+  <div class="card xp-hero">
+    <div class="xp-level">Lv.${lv+1}</div>
+    <div class="xp-rank">${LEVELS[lv].n}</div>
+    <div class="xp-bar-wrap">
+      <div class="xp-bar-label"><span>${D.xp} XP</span><span>${nx} XP</span></div>
+      <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${pct}%"></div></div>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-val g">${ds}</div><div class="stat-lbl">Day</div></div>
+    <div class="stat"><div class="stat-val o">${s.cs}</div><div class="stat-lbl">Streak</div></div>
+    <div class="stat"><div class="stat-val b">${s.sd}</div><div class="stat-lbl">Sober</div></div>
+    <div class="stat"><div class="stat-val p">${tc}/${getHabits().length}</div><div class="stat-lbl">Today</div></div>
+    <div class="stat"><div class="stat-val c">${ua}/${ACHS.length}</div><div class="stat-lbl">Badges</div></div>
+    <div class="stat"><div class="stat-val g">${s.tl}</div><div class="stat-lbl">Logged</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📈 This Week</div>
+    ${weekChart()}
+  </div>
+  <div class="card">
+    <div class="card-title">🎯 Quick Actions</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="nav('habits')">Log Habits</button>
+      <button class="btn btn-secondary" onclick="nav('gym')">Log Workout</button>
+    </div>
+  </div>
+  ${ua>0?`<div class="card">
+    <div class="card-title">🏆 Recent Badges</div>
+    <div class="ach-grid">${ACHS.filter(a=>D.ach[a.id]).slice(-3).map(a=>`
+      <div class="ach unlocked"><div class="ach-ico">${a.i}</div><div class="ach-nm">${a.n}</div><div class="ach-dt">${D.ach[a.id]}</div></div>
+    `).join('')}</div>
+  </div>`:''}`;
+}
+
+function weekChart(){
+  const days=[];const t=new Date(TODAY());
+  for(let i=6;i>=0;i--){const d=new Date(t);d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);const day=D.days[ds];const c=day&&day.h?Object.values(day.h).filter(v=>v).length:0;days.push({l:['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()],c})}
+  return days.map(d=>{
+    const p=d.c/getHabits().length*100;
+    const cl=p>=80?'var(--green)':p>=50?'var(--gold)':p>0?'var(--orange)':'var(--bg3)';
+    return `<div class="bar-row"><div class="bar-lbl">${d.l}</div><div class="bar-bg"><div class="bar-fill" style="width:${p}%;background:${cl}"></div></div><div class="bar-val" style="color:${cl}">${d.c}</div></div>`;
+  }).join('');
+}
+
+// ====== HABITS ======
+let editingHabits=false;
+const ICONS=['💧','🛡️','☀️','💪','🍳','✨','🌙','💊','😴','🚫','🧊','🥚','🏃','📖','🧘','🥗','🫁','🧠','💤','🦷','🧴','💡','🎯','⏰','🌿','🍎','🥤','🚶','🫀','🧹'];
+
+function pgHabits(){
+  const sel=D.sel||TODAY(),day=getDay(sel),isT=sel===TODAY();
+  const habits=getHabits();
+  const done=day.h?Object.values(day.h).filter(v=>v).length:0;
+
+  if(editingHabits)return pgHabitsEdit();
+
+  return `
+  <div class="date-nav">
+    <button onclick="chgDate(-1)">◀</button>
+    <div class="date-display">${fmtDateLong(sel)}</div>
+    ${isT?'<span class="today-tag">TODAY</span>':''}
+    <button onclick="chgDate(1)">▶</button>
+  </div>
+  ${!isT?`<div style="text-align:center;margin-bottom:12px"><button class="btn btn-sm btn-secondary" onclick="goToday()">Back to Today</button></div>`:''}
+  <div class="card">
+    <div class="card-title">Daily Habits <span class="card-subtitle">${done}/${habits.length}</span>
+      <button class="btn btn-sm btn-secondary" style="margin-left:auto;padding:6px 10px;font-size:11px" onclick="editingHabits=true;render()">✏️ Edit</button>
+    </div>
+    ${habits.map(h=>{
+      const d=day.h&&day.h[h.id];
+      return `<div class="habit ${d?'done':''}" data-id="${h.id}">
+        <div class="habit-chk">${d?'✓':''}</div>
+        <div class="habit-info"><div class="habit-name">${h.icon} ${h.name}</div><div class="habit-desc">${h.desc}</div></div>
+        <div class="habit-xp">+${h.xp}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="card">
+    <div class="card-title">📝 Notes</div>
+    <div class="inp-group"><textarea id="dayNotes" placeholder="How are you feeling today?">${day.notes||''}</textarea></div>
+    <button class="btn btn-sm btn-secondary" onclick="saveNotes()">Save</button>
+  </div>`;
+}
+
+function pgHabitsEdit(){
+  const habits=getHabits();
+  return `
+  <div class="card">
+    <div class="card-title">✏️ Edit Habits
+      <button class="btn btn-sm btn-primary" style="margin-left:auto;padding:6px 10px;font-size:11px" onclick="editingHabits=false;render()">✓ Done</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Tap a habit to edit it. Drag to reorder. Add new habits below.</p>
+    <div id="habitEditList">
+    ${habits.map((h,i)=>`
+      <div class="habit" style="margin-bottom:6px" data-idx="${i}">
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0">
+          <div style="display:flex;gap:6px;align-items:center">
+            <select onchange="updateHabitField(${i},'icon',this.value)" style="width:44px;padding:6px 2px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:18px;color:var(--text);text-align:center">
+              ${ICONS.map(ic=>`<option ${ic===h.icon?'selected':''}>${ic}</option>`).join('')}
+            </select>
+            <input value="${h.name.replace(/"/g,'&quot;')}" onchange="updateHabitField(${i},'name',this.value)" placeholder="Habit name" style="flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;font-weight:600">
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input value="${h.desc.replace(/"/g,'&quot;')}" onchange="updateHabitField(${i},'desc',this.value)" placeholder="Description" style="flex:1;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px">
+            <div style="display:flex;align-items:center;gap:2px;flex-shrink:0">
+              <span style="font-size:11px;color:var(--gold)">XP:</span>
+              <input type="number" value="${h.xp}" onchange="updateHabitField(${i},'xp',parseInt(this.value)||10)" style="width:44px;padding:6px 4px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-size:12px;font-weight:700;text-align:center" inputmode="numeric">
+            </div>
+            <button onclick="removeHabit(${i})" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--red);font-size:14px;cursor:pointer;flex-shrink:0">✕</button>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">➕ Add New Habit</div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+      <select id="newHabitIcon" style="width:44px;padding:8px 2px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:18px;color:var(--text);text-align:center">
+        ${ICONS.map(ic=>`<option>${ic}</option>`).join('')}
+      </select>
+      <input id="newHabitName" placeholder="Habit name" style="flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px">
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+      <input id="newHabitDesc" placeholder="Description (optional)" style="flex:1;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px">
+      <div style="display:flex;align-items:center;gap:2px;flex-shrink:0">
+        <span style="font-size:11px;color:var(--gold)">XP:</span>
+        <input type="number" id="newHabitXP" value="15" style="width:44px;padding:6px 4px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-size:12px;font-weight:700;text-align:center" inputmode="numeric">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addNewHabit()">Add Habit</button>
+  </div>
+  <div class="card">
+    <button class="btn btn-secondary" onclick="resetHabits()" style="color:var(--orange)">↺ Reset to Default Habits</button>
+  </div>`;
+}
+
+function updateHabitField(idx,field,value){
+  const habits=[...getHabits()];
+  habits[idx]={...habits[idx],[field]:value};
+  D.customHabits=habits;save();render();
+}
+
+function removeHabit(idx){
+  if(!confirm('Remove this habit?'))return;
+  const habits=[...getHabits()];
+  habits.splice(idx,1);
+  D.customHabits=habits;save();render();
+}
+
+function addNewHabit(){
+  const name=document.getElementById('newHabitName').value.trim();
+  if(!name){toast('Enter a habit name');return}
+  const habits=[...getHabits()];
+  const id='custom_'+Date.now();
+  habits.push({
+    id,name,
+    desc:document.getElementById('newHabitDesc').value.trim()||'',
+    xp:parseInt(document.getElementById('newHabitXP').value)||15,
+    icon:document.getElementById('newHabitIcon').value||'🎯'
+  });
+  D.customHabits=habits;save();toast('Habit added!');render();
+}
+
+function resetHabits(){
+  if(!confirm('Reset to default habits? Your custom habits will be removed.'))return;
+  delete D.customHabits;save();toast('Habits reset to defaults');render();
+}
+
+function bindH(){document.querySelectorAll('.habit[data-id]').forEach(el=>el.addEventListener('click',()=>{
+  const id=el.dataset.id,sel=D.sel||TODAY(),day=getDay(sel);
+  if(!day.h)day.h={};const was=day.h[id];day.h[id]=!was;
+  if(!was){const h=getHabits().find(h=>h.id===id);addXP(h.xp)}
+  save();render();
+}))}
+
+function saveNotes(){const day=getDay(D.sel||TODAY());day.notes=document.getElementById('dayNotes').value;save();toast('Saved!')}
+function chgDate(dir){const d=new Date(D.sel||TODAY());d.setDate(d.getDate()+dir);if(d>new Date(TODAY()))return;D.sel=d.toISOString().slice(0,10);save();render()}
+function goToday(){D.sel=TODAY();save();render()}
+
+// ====== MEALS ======
+function pgMeals(){
+  const wk=getWeek(),days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  return `
+  <div class="card">
+    <div class="card-title">🍽️ This Week</div>
+    ${days.map(d=>{
+      const k=`${wk}_${d}`,m=D.mp[k]||{};
+      return `<div class="meal-row">
+        <div class="meal-day">${d}</div>
+        <div class="meal-inputs">
+          <input class="meal-input" value="${(m.b||'').replace(/"/g,'&quot;')}" onchange="saveMeal('${k}','b',this.value)" placeholder="🌅 Breakfast">
+          <input class="meal-input" value="${(m.l||'').replace(/"/g,'&quot;')}" onchange="saveMeal('${k}','l',this.value)" placeholder="☀️ Lunch">
+          <input class="meal-input" value="${(m.d||'').replace(/"/g,'&quot;')}" onchange="saveMeal('${k}','d',this.value)" placeholder="🌙 Dinner">
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="card">
+    <div class="card-title">🥘 Quick Recipes</div>
+    ${[
+      {n:'Overnight Oats',t:'5 min prep',d:'Oats + coconut yogurt + frozen berries + chia seeds + honey',g:'Breakfast',c:'var(--blue)'},
+      {n:'Egg Scramble Wrap',t:'10 min',d:'3 eggs + spinach + turmeric + avocado on tortilla',g:'Breakfast',c:'var(--blue)'},
+      {n:'Berry Smoothie',t:'5 min',d:'Frozen berries + banana + spinach + oat milk + flax',g:'Breakfast',c:'var(--blue)'},
+      {n:'Sheet Pan Chicken',t:'35 min',d:'Chicken thighs + sweet potatoes + broccoli + olive oil, 400°F',g:'Dinner',c:'var(--green)'},
+      {n:'Lentil Soup',t:'30 min',d:'Lentils + canned tomatoes + onion + garlic + cumin + spinach',g:'Lunch',c:'var(--orange)'},
+      {n:'Salmon Stir-Fry',t:'15 min',d:'Canned salmon + frozen veggies + soy sauce + ginger + rice',g:'Dinner',c:'var(--green)'},
+      {n:'Black Bean Tacos',t:'10 min',d:'Black beans + cumin + garlic in tortilla with avocado + salsa',g:'Dinner',c:'var(--green)'},
+      {n:'Chickpea Wrap',t:'No cook',d:'Mashed chickpeas + olive oil + lemon + celery + spices',g:'Lunch',c:'var(--purple)'},
+    ].map(r=>`<div class="recipe" style="border-left-color:${r.c}">
+      <div class="recipe-head"><span class="recipe-name">${r.n}</span><span class="recipe-tag" style="color:${r.c}">${r.g}</span></div>
+      <div class="recipe-desc">${r.d}</div>
+      <div class="recipe-time">⏱️ ${r.t}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function saveMeal(k,f,v){if(!D.mp[k])D.mp[k]={};D.mp[k][f]=v;save()}
+function getWeek(){const d=new Date(TODAY());const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);return new Date(d.setDate(diff)).toISOString().slice(0,10)}
+
+// ====== SUPPLEMENTS ======
+function pgSupps(){
+  const sel=D.sel||TODAY(),day=getDay(sel);if(!day.s)day.s={};
+  const supps=[
+    {id:'glutamine',n:'L-Glutamine',dose:'5g powder',w:'Morning, empty stomach',i:'🧬'},
+    {id:'probiotic',n:'Probiotic',dose:'1 cap, 10B+ CFU',w:'With breakfast',i:'🦠'},
+    {id:'bcomplex',n:'B-Complex',dose:'1 capsule',w:'With breakfast',i:'🅱️'},
+    {id:'magnesium',n:'Magnesium',dose:'200-400mg',w:'Before bed',i:'🔮'},
+    {id:'vitd',n:'Vitamin D3',dose:'2000-5000 IU',w:'With meal + fat',i:'🌞'},
+    {id:'omega3',n:'Omega-3',dose:'1000-2000mg',w:'With food',i:'🐟'},
+  ];
+  return `
+  <div class="date-nav">
+    <button onclick="chgDate(-1)">◀</button>
+    <div class="date-display">${fmtDateLong(sel)}</div>
+    <button onclick="chgDate(1)">▶</button>
+  </div>
+  <div class="card">
+    <div class="card-title">💊 Supplements</div>
+    ${supps.map(s=>{
+      const done=day.s&&day.s[s.id];
+      return `<div class="habit ${done?'done':''}" data-supp="${s.id}">
+        <div class="habit-chk">${done?'✓':''}</div>
+        <div class="habit-info"><div class="habit-name">${s.i} ${s.n}</div><div class="habit-desc">${s.dose} — ${s.w}</div></div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="guide-tip">Introduce one new supplement at a time. Always discuss with your healthcare provider given your current medications.</div>`;
+}
+
+function bindS(){document.querySelectorAll('[data-supp]').forEach(el=>el.addEventListener('click',()=>{
+  const id=el.dataset.supp,sel=D.sel||TODAY(),day=getDay(sel);
+  if(!day.s)day.s={};day.s[id]=!day.s[id];save();render();
+}))}
+
+// ====== GYM ======
+function pgGym(){
+  return `
+  <div class="card">
+    <div class="card-title">💪 Log Workout</div>
+    <div class="inp-row">
+      <div class="inp-group"><label>Date</label><input type="date" id="gDate" value="${TODAY()}"></div>
+      <div class="inp-group"><label>Type</label>
+        <select id="gType"><option>Treadmill Walk</option><option>Upper Body</option><option>Lower Body</option><option>Full Body</option><option>Cardio</option><option>Stretching</option><option>Other</option></select>
+      </div>
+    </div>
+    <div class="inp-group"><label>Exercises</label><input id="gEx" placeholder="Incline walk 20 min, DB bench 3x10..."></div>
+    <div class="inp-row">
+      <div class="inp-group"><label>Duration (min)</label><input type="number" id="gDur" placeholder="30" inputmode="numeric"></div>
+      <div class="inp-group"><label>Feeling (1-5)</label>
+        <div class="rating" id="gR">${[1,2,3,4,5].map(n=>`<button class="rating-btn" onclick="selR('gR',${n})">${n}</button>`).join('')}</div>
+      </div>
+    </div>
+    <div class="inp-group"><label>Notes</label><textarea id="gNotes" placeholder="PRs, energy level, etc."></textarea></div>
+    <button class="btn btn-primary" onclick="saveGym()">Log Workout (+30 XP) 💪</button>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 History</div>
+    ${D.gym.length?`
+    <div class="h-scroll"><table class="log-table">
+      <tr><th>Date</th><th>Type</th><th>Exercises</th><th>Min</th><th>Feel</th></tr>
+      ${D.gym.slice().reverse().slice(0,15).map(e=>`
+        <tr><td>${fmtDate(e.date)}</td><td>${e.type}</td><td>${e.ex}</td><td>${e.dur}</td><td>${'⭐'.repeat(e.r||0)}</td></tr>
+      `).join('')}
+    </table></div>`:'<p style="color:var(--text3);font-size:13px;padding:8px">No workouts yet. Your first earns a badge!</p>'}
+  </div>
+  <div class="guide-tip">
+    <strong>Weeks 1-2:</strong> Just show up 3x. Treadmill walk. Try one machine.<br>
+    <strong>Weeks 3+:</strong> Mon: Upper | Wed: Lower | Fri: Full Body<br>
+    <strong>Remember:</strong> Exercise = natural ADHD medicine. 20-min walk boosts focus for hours.
+  </div>`;
+}
+
+let sR={};
+function selR(g,v){sR[g]=v;document.querySelectorAll(`#${g} .rating-btn`).forEach(b=>b.classList.toggle('selected',parseInt(b.textContent)<=v))}
+
+function saveGym(){
+  const e={date:document.getElementById('gDate').value,type:document.getElementById('gType').value,ex:document.getElementById('gEx').value,dur:document.getElementById('gDur').value,r:sR.gR||0,notes:document.getElementById('gNotes').value};
+  if(!e.ex&&!e.dur){toast('Add workout details!');return}
+  D.gym.push(e);addXP(30);save();toast('Workout logged! +30 XP 💪');render();
+}
+
+// ====== CHECK-IN ======
+function pgCheckin(){
+  const areas=['Face Bloat','Skin','Energy','Gut Health','Mood','Focus/ADHD'];
+  const keys=['FB','SQ','EL','GH','OM','FA'];
+  return `
+  <div class="card">
+    <div class="card-title">📊 Weekly Check-In</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Rate each area 1-10. Be honest — this is for you.</p>
+    ${areas.map((a,i)=>`
+    <div class="inp-group">
+      <label>${a}</label>
+      <div class="rating" id="ci_${keys[i]}">${Array.from({length:10},(_,j)=>`<button class="rating-btn" onclick="selR('ci_${keys[i]}',${j+1})">${j+1}</button>`).join('')}</div>
+    </div>`).join('')}
+    <div class="inp-group"><label>Wins</label><textarea id="ciW" placeholder="What went well?"></textarea></div>
+    <div class="inp-group"><label>Struggles</label><textarea id="ciS" placeholder="What was hard?"></textarea></div>
+    <div class="inp-group"><label>Next Week Focus</label><textarea id="ciF" placeholder="One thing to improve?"></textarea></div>
+    <button class="btn btn-gold" onclick="saveCi()">Submit (+50 XP) 📊</button>
+  </div>
+  <div class="card">
+    <div class="card-title">📈 History</div>
+    ${D.wk.length?`<div class="h-scroll"><table class="log-table">
+      <tr><th>Date</th><th>Bloat</th><th>Skin</th><th>Energy</th><th>Gut</th><th>Mood</th><th>Focus</th></tr>
+      ${D.wk.slice().reverse().map(c=>`
+        <tr><td>${fmtDate(c.dt)}</td>${['FB','SQ','EL','GH','OM','FA'].map(k=>{
+          const v=c[k]||0;const cl=v>=7?'var(--green)':v>=4?'var(--gold)':'var(--red)';
+          return `<td style="color:${cl};font-weight:700">${v}</td>`;
+        }).join('')}</tr>
+      `).join('')}
+    </table></div>`:'<p style="color:var(--text3);font-size:13px;padding:8px">No check-ins yet. First one earns a badge!</p>'}
+  </div>`;
+}
+
+function saveCi(){
+  const e={dt:TODAY()};
+  ['FB','SQ','EL','GH','OM','FA'].forEach(k=>e[k]=sR['ci_'+k]||0);
+  e.w=document.getElementById('ciW').value;
+  e.s=document.getElementById('ciS').value;
+  e.f=document.getElementById('ciF').value;
+  D.wk.push(e);addXP(50);save();toast('Check-in saved! +50 XP 📊');sR={};render();
+}
+
+// ====== ACHIEVEMENTS ======
+function pgAch(){
+  return `<div class="card">
+    <div class="card-title">🏆 Achievements <span class="card-subtitle">${Object.keys(D.ach).length}/${ACHS.length}</span></div>
+    <div class="ach-grid">${ACHS.map(a=>{
+      const u=D.ach[a.id];
+      return `<div class="ach ${u?'unlocked':''}"><div class="ach-ico">${a.i}</div><div class="ach-nm">${a.n}</div><div class="ach-ds">${a.d}</div>${u?`<div class="ach-dt">${u}</div>`:''}</div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+function checkAch(){
+  const s=stats();let nu=[];
+  ACHS.forEach(a=>{if(!D.ach[a.id]&&a.c(s)){D.ach[a.id]=TODAY();nu.push(a)}});
+  if(nu.length){save();nu.forEach(a=>setTimeout(()=>toast(`🏆 ${a.n} unlocked!`),500))}
+}
+
+// ====== MORE ======
+function pgMore(){
+  return `
+  <div class="card">
+    <div class="card-title">More</div>
+    ${[
+      {id:'meals',icon:'🍽️',name:'Meals',desc:'Plan meals and browse recipes'},
+      {id:'supplements',icon:'💊',name:'Supplements',desc:'Track daily supplement intake'},
+      {id:'checkin',icon:'📊',name:'Weekly Check-In',desc:'Rate your progress across all areas'},
+      {id:'achievements',icon:'🏆',name:'Achievements',desc:`${Object.keys(D.ach).length}/${ACHS.length} unlocked`},
+      {id:'guide',icon:'📖',name:'Guide',desc:'Your full health optimization reference'},
+    ].map(item=>`
+      <div class="habit" onclick="page='${item.id}';render();window.scrollTo(0,0)" style="cursor:pointer">
+        <div style="font-size:28px;width:32px;text-align:center">${item.icon}</div>
+        <div class="habit-info"><div class="habit-name">${item.name}</div><div class="habit-desc">${item.desc}</div></div>
+        <div style="color:var(--text3);font-size:18px">›</div>
+      </div>
+    `).join('')}
+  </div>
+  <div class="card">
+    <div class="card-title">💾 Save & Backup</div>
+    <button class="btn btn-gold" onclick="exportData()" style="margin-bottom:10px">💾 Save Progress (Export Backup)</button>
+    <button class="btn btn-secondary" onclick="importData()">📂 Load Saved Progress (Import)</button>
+    <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">Export saves a backup file you can re-import anytime. Your data lives in this browser — back up regularly!</p>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:var(--red)">🗑️ Reset</div>
+    <button class="btn btn-secondary" style="color:var(--red);border-color:rgba(255,23,68,.3)" onclick="clearProgress()">Clear All Progress</button>
+    <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">This permanently deletes all your data — habits, gym logs, PSL analyses, achievements, everything. Cannot be undone.</p>
+  </div>`;
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`healthquest_backup_${TODAY()}.json`;a.click();
+  toast('Data exported!');
+}
+
+function importData(){
+  const input=document.createElement('input');input.type='file';input.accept='.json';
+  input.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const imported=JSON.parse(ev.target.result);
+        if(imported.xp!==undefined){D=imported;save();render();toast('Data imported!')}
+        else toast('Invalid file format');
+      }catch(err){toast('Error reading file')}
+    };
+    r.readAsText(f);
+  };
+  input.click();
+}
+
+function clearProgress(){
+  if(!confirm('⚠️ Are you sure? This will permanently delete ALL your progress — habits, gym logs, check-ins, PSL analyses, achievements, everything.'))return;
+  if(!confirm('Really sure? This CANNOT be undone. Consider exporting a backup first.'))return;
+  localStorage.removeItem(SK);
+  D={xp:0,days:{},gym:[],wk:[],ach:{},sd:TODAY(),sel:TODAY(),mp:{}};
+  save();toast('All progress cleared. Fresh start!');render();
+}
+
+// ====== GUIDE ======
+function pgGuide(){
+  return `
+  <div class="card guide-section">
+    <h3>🧊 Face De-Bloat Protocol</h3>
+    <ul>
+      <li><strong>Hydrate:</strong> 80-100 oz water daily. 16-20 oz with lemon first thing.</li>
+      <li><strong>Cut sodium:</strong> Reducing DoorDash is the single fastest win.</li>
+      <li><strong>Morning routine:</strong> Cold water 30 sec, then lymphatic massage jaw to ears 2-3 min.</li>
+      <li><strong>Potassium foods:</strong> Bananas, sweet potatoes, avocados, spinach.</li>
+      <li><strong>Sleep elevated:</strong> Extra pillow prevents fluid pooling in face.</li>
+      <li><strong>Talk to prescriber:</strong> Olanzapine is likely biggest contributor.</li>
+    </ul>
+    <div class="guide-tip">Hydration/sodium changes: 1-2 weeks. Alcohol inflammation: 4-8 weeks. Medication: prescriber conversation needed.</div>
+  </div>
+  <div class="card guide-section">
+    <h3>🦠 Gut Health Recovery</h3>
+    <ul>
+      <li><strong>L-Glutamine (5g):</strong> Repairs leaky gut from alcohol damage.</li>
+      <li><strong>Probiotic:</strong> Look for Lactobacillus rhamnosus GG.</li>
+      <li><strong>Fermented foods:</strong> Sauerkraut, kimchi, kombucha, coconut yogurt.</li>
+      <li><strong>Prebiotic fiber:</strong> Garlic, onions, leeks, asparagus, bananas, oats.</li>
+      <li><strong>Bone broth:</strong> Cup daily supports gut lining repair.</li>
+      <li><strong>Avoid:</strong> Artificial sweeteners, NSAIDs, caffeine on empty stomach.</li>
+    </ul>
+  </div>
+  <div class="card guide-section">
+    <h3>⚡ Energy & ADHD</h3>
+    <ul>
+      <li><strong>Consistent wake time:</strong> Same time every day, even weekends.</li>
+      <li><strong>Morning protocol:</strong> Cold water → sunlight → movement → protein → caffeine (90 min after wake).</li>
+      <li><strong>Cannabis timing:</strong> 2-3 hours before bed, not right at bedtime.</li>
+      <li><strong>Body doubling:</strong> Work alongside someone or "study with me" streams.</li>
+      <li><strong>Pomodoro:</strong> 25 min work, 5 min break.</li>
+      <li><strong>Exercise = ADHD medicine:</strong> 20-min walk boosts focus for hours.</li>
+    </ul>
+    <div class="guide-tip">Talk to your prescriber about whether your ADHD is being adequately addressed. Some bipolar patients do well adding ADHD treatment once mood is stabilized.</div>
+  </div>
+  <div class="card guide-section">
+    <h3>🍳 Nutrition</h3>
+    <ul>
+      <li><strong>Proteins:</strong> Chicken thighs, canned salmon, eggs, chickpeas, lentils, tofu</li>
+      <li><strong>Veggies:</strong> Frozen broccoli/spinach, sweet potatoes, onions, garlic</li>
+      <li><strong>Anti-inflammatory:</strong> Turmeric, ginger, berries, leafy greens, olive oil</li>
+      <li><strong>DoorDash plan:</strong> Week 1: Cook 3, order 4 → Week 4: Cook 5+</li>
+    </ul>
+  </div>
+  <div class="card guide-section">
+    <h3>✨ Skincare</h3>
+    <ul>
+      <li><strong>AM:</strong> Cleanser → Vitamin C → Moisturizer → SPF 30+</li>
+      <li><strong>PM:</strong> Cleanser → Retinol (2-3x/wk) → Moisturizer</li>
+      <li><strong>Start with:</strong> Cleanser + moisturizer + sunscreen. Add serums later.</li>
+    </ul>
+  </div>
+  <div class="card guide-section">
+    <h3>🗓️ 90-Day Phases</h3>
+    <ul>
+      <li><strong>Weeks 1-2:</strong> Stay sober, hydrate, morning protocol, cook 3 dinners, basic skincare, gym once.</li>
+      <li><strong>Weeks 3-4:</strong> Add supplements, cook 4-5 dinners, gym 3x/week, vitamin C serum, schedule prescriber.</li>
+      <li><strong>Weeks 5-8:</strong> Full nutrition, DoorDash 1-2x/wk, structured gym, full skincare, Sunday meal prep.</li>
+      <li><strong>Weeks 9-12:</strong> Reassess, progressive overload, consider reducing cigarettes, celebrate.</li>
+    </ul>
+  </div>`;
+}
+
+// ====== PSL ANALYSIS (Computer Vision) ======
+let pslModelsLoaded=false,pslAnalyzing=false;
+
+async function loadPSLModels(){
+  if(pslModelsLoaded)return true;
+  try{
+    const MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+    ]);
+    pslModelsLoaded=true;return true;
+  }catch(e){console.error('Model load error:',e);return false}
+}
+
+// Landmark indices (68-point model)
+// Jaw: 0-16, L-brow: 17-21, R-brow: 22-26, Nose bridge: 27-30, Nose bottom: 31-35
+// L-eye: 36-41 (36=outer,39=inner), R-eye: 42-47 (42=inner,45=outer)
+// Outer lip: 48-59, Inner lip: 60-67
+
+function dist(a,b){return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2)}
+function midpoint(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
+function angle(from,to){return Math.atan2(to.y-from.y,to.x-from.x)*180/Math.PI}
+
+function analyzeFace(landmarks){
+  const p=landmarks.positions;
+  const metrics={};
+
+  // ---- FWHR (Face Width to Height Ratio) ----
+  // Width: across cheekbones (point 1 to 15)
+  // Height: brow line (mid of 19,24) to upper lip (51)
+  const faceW=dist(p[1],p[15]);
+  const browMid=midpoint(p[19],p[24]);
+  const faceH=dist(browMid,p[51]);
+  metrics.fwhr={value:Math.round(faceW/faceH*100)/100,ideal:'1.90-2.05',name:'Face Width-Height Ratio',
+    score:scoreRange(faceW/faceH,1.9,2.05,0.3)};
+
+  // ---- Canthal Tilt ----
+  const lCanthal=angle(p[39],p[36]); // inner to outer, left eye
+  const rCanthal=angle(p[42],p[45]); // inner to outer, right eye
+  const avgCanthal=Math.round(((lCanthal+rCanthal)/2)*10)/10;
+  // For male PSL, positive tilt (3-7°) is ideal
+  metrics.canthalTilt={value:avgCanthal+'°',ideal:'+3° to +7°',name:'Canthal Tilt',
+    score:scoreRange(-avgCanthal,3,7,5)}; // negative because upward = negative in screen coords
+
+  // ---- Facial Thirds ----
+  // Upper: top of face (approx from brow + forehead estimate) to brow
+  // We estimate forehead top as brow point mirrored above by ~same distance as brow-to-nose
+  const browLine=(p[19].y+p[24].y)/2;
+  const noseBase=p[33].y;
+  const chin=p[8].y;
+  const foreheadEst=browLine-(noseBase-browLine)*0.85; // estimate
+  const upper=browLine-foreheadEst;
+  const middle=noseBase-browLine;
+  const lower=chin-noseBase;
+  const totalFace=upper+middle+lower;
+  const upperPct=Math.round(upper/totalFace*100);
+  const middlePct=Math.round(middle/totalFace*100);
+  const lowerPct=Math.round(lower/totalFace*100);
+  // Ideal is roughly equal thirds (33/33/33)
+  const thirdsDev=Math.abs(upperPct-33)+Math.abs(middlePct-33)+Math.abs(lowerPct-33);
+  metrics.facialThirds={value:`${upperPct}/${middlePct}/${lowerPct}`,ideal:'33/33/33',name:'Facial Thirds',
+    score:Math.max(0,Math.min(100,100-thirdsDev*2.5))};
+
+  // ---- Midface Ratio ----
+  const eyeCenterL=midpoint(p[36],p[39]);
+  const eyeCenterR=midpoint(p[42],p[45]);
+  const ipd=dist(eyeCenterL,eyeCenterR);
+  const midfaceH=dist(midpoint(eyeCenterL,eyeCenterR),p[51]);
+  const mfr=Math.round(ipd/midfaceH*100)/100;
+  metrics.midfaceRatio={value:mfr,ideal:'0.95-1.0',name:'Midface Ratio',
+    score:scoreRange(mfr,0.95,1.0,0.2)};
+
+  // ---- Jaw Width vs Cheekbone Width ----
+  const jawW=dist(p[5],p[11]);
+  const cheekW=dist(p[1],p[15]);
+  const jawRatio=Math.round(jawW/cheekW*100)/100;
+  metrics.jawWidth={value:jawRatio,ideal:'0.75-0.85',name:'Jaw-to-Cheekbone Ratio',
+    score:scoreRange(jawRatio,0.75,0.85,0.2)};
+
+  // ---- Facial Symmetry ----
+  const center=midpoint(p[27],p[8]); // nose bridge top to chin center
+  const centerX=(p[27].x+p[8].x)/2;
+  let symTotal=0,symCount=0;
+  const symPairs=[[0,16],[1,15],[2,14],[3,13],[4,12],[5,11],[17,26],[18,25],[19,24],[20,23],[21,22],[36,45],[37,44],[38,43],[39,42],[40,47],[41,46],[31,35],[32,34],[48,54],[49,53],[50,52],[55,59],[56,58]];
+  symPairs.forEach(([l,r])=>{
+    const dl=Math.abs(p[l].x-centerX);
+    const dr=Math.abs(p[r].x-centerX);
+    const max=Math.max(dl,dr);
+    if(max>0){symTotal+=Math.min(dl,dr)/max;symCount++}
+  });
+  const symScore=symCount>0?Math.round(symTotal/symCount*100):50;
+  metrics.symmetry={value:symScore+'%',ideal:'95%+',name:'Facial Symmetry',score:Math.min(100,symScore)};
+
+  // ---- Eye Spacing (ES/FW ratio) ----
+  const esfw=Math.round(ipd/faceW*100)/100;
+  metrics.eyeSpacing={value:esfw,ideal:'0.44-0.47',name:'Eye Spacing Ratio',
+    score:scoreRange(esfw,0.44,0.47,0.08)};
+
+  // ---- Nose Width Ratio ----
+  const noseW=dist(p[31],p[35]);
+  const nwRatio=Math.round(noseW/faceW*100)/100;
+  metrics.noseWidth={value:nwRatio,ideal:'0.20-0.25',name:'Nose Width Ratio',
+    score:scoreRange(nwRatio,0.20,0.25,0.08)};
+
+  // ---- Lip Ratio ----
+  const upperLip=dist(p[51],p[62]);
+  const lowerLip=dist(p[57],p[66]);
+  const lipR=Math.round(upperLip/lowerLip*100)/100;
+  metrics.lipRatio={value:lipR,ideal:'0.40-0.60',name:'Upper-to-Lower Lip Ratio',
+    score:scoreRange(lipR,0.40,0.60,0.3)};
+
+  // ---- Gonial Angle Estimate ----
+  // Angle at jaw corner: approximate from points 4/5 area
+  const lJawAngle=angle(p[3],p[5])-angle(p[5],p[7]);
+  const rJawAngle=angle(p[13],p[11])-angle(p[11],p[9]);
+  const avgGonial=Math.round(Math.abs((lJawAngle+rJawAngle)/2)*10)/10;
+  metrics.gonialAngle={value:avgGonial+'°',ideal:'115°-125°',name:'Gonial Angle (est.)',
+    score:scoreRange(avgGonial,115,125,20)};
+
+  // ---- Brow Height ----
+  const lBrowH=dist(midpoint(p[19],p[20]),midpoint(p[37],p[38]));
+  const rBrowH=dist(midpoint(p[23],p[24]),midpoint(p[43],p[44]));
+  const browH=((lBrowH+rBrowH)/2);
+  const browRatio=Math.round(browH/faceH*100)/100;
+  metrics.browHeight={value:browRatio,ideal:'0.08-0.14',name:'Brow-to-Eye Distance',
+    score:scoreRange(browRatio,0.08,0.14,0.08)};
+
+  // Calculate overall PSL
+  const weights={fwhr:1.2,canthalTilt:1.3,facialThirds:0.9,midfaceRatio:1.0,jawWidth:1.1,
+    symmetry:1.4,eyeSpacing:0.7,noseWidth:0.6,lipRatio:0.5,gonialAngle:1.0,browHeight:0.7};
+  let wSum=0,wTotal=0;
+  Object.keys(metrics).forEach(k=>{
+    const w=weights[k]||1;
+    wSum+=metrics[k].score*w;
+    wTotal+=w;
+  });
+  const rawPct=wSum/wTotal; // 0-100
+  // Map percentage to PSL 1-7 range (realistic)
+  const psl=Math.round((1+rawPct/100*6)*10)/10;
+
+  return{psl:Math.min(psl,7.5),metrics,landmarks:p};
+}
+
+function scoreRange(val,idealLow,idealHigh,tolerance){
+  if(val>=idealLow&&val<=idealHigh)return 100;
+  const distFromIdeal=val<idealLow?idealLow-val:val-idealHigh;
+  return Math.max(0,Math.min(100,100-distFromIdeal/tolerance*100));
+}
+
+function getPSLTier(s){
+  if(s>=6.5)return{n:'Top Tier',c:'var(--gold)',bg:'rgba(255,214,0,.1)'};
+  if(s>=5.5)return{n:'Above Average',c:'var(--green)',bg:'rgba(0,230,118,.1)'};
+  if(s>=4.5)return{n:'Average+',c:'var(--green2)',bg:'rgba(105,240,174,.1)'};
+  if(s>=3.5)return{n:'Average',c:'var(--blue)',bg:'rgba(68,138,255,.1)'};
+  if(s>=2.5)return{n:'Below Average',c:'var(--orange)',bg:'rgba(255,109,0,.1)'};
+  return{n:'Needs Work',c:'var(--red)',bg:'rgba(255,23,68,.1)'};
+}
+
+function getMetricImprovements(metrics){
+  const imps=[];
+  const tips={
+    fwhr:[{t:'Reduce facial bloat',b:'Water retention masks your bone structure. Hydrate 80+ oz/day, cut sodium, discuss olanzapine with your prescriber.',pri:'HIGH'},
+          {t:'Chew mastic gum',b:'Builds masseter muscles to widen jaw, improving FWHR. Start 10-15 min/day.',pri:'MED'}],
+    canthalTilt:[{t:'Reduce undereye puffiness',b:'Cold compress mornings, sleep elevated, reduce sodium. Alcohol cessation improves this over 4-8 weeks.',pri:'HIGH'},
+                 {t:'Caffeine eye cream',b:'The Ordinary Caffeine Solution — cheap, reduces puffiness and dark circles around eye area.',pri:'MED'}],
+    facialThirds:[{t:'Strategic facial hair',b:'Stubble or a beard can visually adjust your facial thirds. Experiment with different lengths.',pri:'MED'},
+                  {t:'Hairstyle adjustment',b:'Forehead-showing vs. fringe styles change perceived upper third. Find what balances your proportions.',pri:'MED'}],
+    jawWidth:[{t:'Lose facial fat',b:'Jaw definition improves dramatically as you lean out. Even 5-10 lbs of fat loss transforms the lower third.',pri:'HIGH'},
+              {t:'Mewing',b:'Rest tongue on roof of mouth. May subtly improve jaw posture and definition over months.',pri:'LOW'}],
+    symmetry:[{t:'Sleep on your back',b:'Side sleeping can create asymmetry over time. Train yourself to sleep face-up.',pri:'MED'},
+              {t:'Chew evenly',b:'Most people favor one side. Alternate sides when eating to balance masseter development.',pri:'LOW'}],
+    midfaceRatio:[{t:'De-bloat the midface',b:'Puffiness elongates the perceived midface. Your hydration and anti-inflammatory diet will help here.',pri:'HIGH'}],
+    noseWidth:[{t:'Nose contouring (optional)',b:'Subtle bronzer along nose sides for photos. Not everyday, but good to know.',pri:'LOW'}],
+    gonialAngle:[{t:'Lean out + mastic gum',b:'Fat loss reveals jaw angles. Mastic gum builds the masseter muscle. Combined effect is significant.',pri:'HIGH'}],
+    browHeight:[{t:'Eyebrow grooming',b:'Clean up below brows to open eye area, but keep them natural. Slight arch adds structure.',pri:'LOW'}],
+    eyeSpacing:[{t:'Brow grooming',b:'Adjusting inner brow edges can subtly affect perceived eye spacing.',pri:'LOW'}],
+    lipRatio:[{t:'Stay hydrated',b:'Hydrated lips look fuller and more proportional. Use lip balm with SPF.',pri:'LOW'}],
+  };
+  // Sort metrics by score ascending (worst first)
+  const sorted=Object.entries(metrics).sort((a,b)=>a[1].score-b[1].score);
+  sorted.forEach(([key,data])=>{
+    if(tips[key]&&data.score<80){
+      const n=data.score<40?2:1;
+      tips[key].slice(0,n).forEach(t=>imps.push({...t,metric:data.name,score:data.score}));
+    }
+  });
+  const priOrd={HIGH:0,MED:1,LOW:2};
+  imps.sort((a,b)=>priOrd[a.pri]-priOrd[b.pri]);
+  return imps;
+}
+
+function getPSLData(){if(!D.psl)D.psl={assessments:[]};return D.psl}
+
+function pgPSL(){
+  const pslData=getPSLData();
+  const lastResult=pslData.assessments.length>0?pslData.assessments[pslData.assessments.length-1]:null;
+  const frontPhotos=pslData.frontPhotos||[];
+  const sidePhotos=pslData.sidePhotos||[];
+  return `
+  <div class="card" style="text-align:center;padding:24px 16px">
+    <div style="font-size:36px;margin-bottom:6px">📸</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:6px;color:var(--green)">AI Face Analysis</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">
+      Uses computer vision to detect 68 facial landmarks and calculate real measurements — FWHR, canthal tilt, symmetry, jaw angles, and more.
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="btn btn-primary" style="cursor:pointer;display:block">
+        📷 Upload Front Profile
+        <input type="file" accept="image/*" capture="user" id="pslUploadFront" style="display:none" onchange="handlePSLPhoto(this,'front')">
+      </label>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="btn btn-secondary" style="cursor:pointer;display:block">
+        📐 Upload Side Profile
+        <input type="file" accept="image/*" capture="user" id="pslUploadSide" style="display:none" onchange="handleSidePhoto(this)">
+      </label>
+    </div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">Front: face camera straight on, neutral expression. Side: turn 90°, show jaw/nose profile. Photos stay on your device.</div>
+  </div>
+
+  <div id="pslAnalysisArea"></div>
+
+  ${frontPhotos.length>0||sidePhotos.length>0?`
+  <div class="card">
+    <div class="card-title">🖼️ Photo Gallery <span class="card-subtitle">Track your progress</span></div>
+    ${frontPhotos.length>0?`
+    <div style="font-size:12px;font-weight:700;color:var(--green2);margin-bottom:8px">Front Profile</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch" class="h-scroll">
+      ${frontPhotos.slice().reverse().slice(0,6).map(p=>`
+        <div style="flex-shrink:0;text-align:center">
+          <img src="${p.img}" style="width:80px;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--text3);margin-top:4px">${fmtDate(p.date)}</div>
+        </div>
+      `).join('')}
+    </div>`:''}
+    ${sidePhotos.length>0?`
+    <div style="font-size:12px;font-weight:700;color:var(--green2);margin:${frontPhotos.length>0?'12px':'0'} 0 8px">Side Profile</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch" class="h-scroll">
+      ${sidePhotos.slice().reverse().slice(0,6).map(p=>`
+        <div style="flex-shrink:0;text-align:center">
+          <img src="${p.img}" style="width:80px;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--text3);margin-top:4px">${fmtDate(p.date)}</div>
+        </div>
+      `).join('')}
+    </div>`:''}
+    ${(frontPhotos.length>0||sidePhotos.length>0)?`<button class="btn btn-sm btn-secondary" style="margin-top:10px;color:var(--orange);font-size:11px" onclick="clearPhotos()">Clear All Photos</button>`:''}
+  </div>`:''}
+
+  ${lastResult?`
+  <div class="card">
+    <div class="card-title">📊 Last Analysis</div>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+      <div>
+        <div class="psl-score-big" style="color:${getPSLTier(lastResult.psl).c};font-size:48px">${lastResult.psl}</div>
+        <div style="font-size:11px;color:var(--text2)">${fmtDate(lastResult.date)}</div>
+      </div>
+      <div class="psl-tier" style="color:${getPSLTier(lastResult.psl).c};background:${getPSLTier(lastResult.psl).bg}">${getPSLTier(lastResult.psl).n}</div>
+    </div>
+    ${lastResult.metrics?Object.entries(lastResult.metrics).map(([k,m])=>{
+      const color=m.score>=80?'var(--green)':m.score>=50?'var(--gold)':m.score>=30?'var(--orange)':'var(--red)';
+      return `<div class="bar-row"><div class="bar-lbl" style="width:90px;font-size:10px">${m.name.split(' ')[0]}</div><div class="bar-bg"><div class="bar-fill" style="width:${m.score}%;background:${color}"></div></div><div class="bar-val" style="color:${color};width:36px;font-size:11px">${Math.round(m.score)}</div></div>`;
+    }).join(''):''}
+  </div>`:''}
+
+  ${pslData.assessments.length>1?`
+  <div class="card">
+    <div class="card-title">📈 Score History</div>
+    ${pslData.assessments.slice().reverse().slice(0,10).map(a=>{
+      const tier=getPSLTier(a.psl);
+      return `<div class="psl-history-item">
+        <div class="psl-history-date">${fmtDate(a.date)}</div>
+        <div class="psl-history-score" style="color:${tier.c}">${a.psl}</div>
+      </div>`;
+    }).join('')}
+  </div>`:''}
+
+  <div class="guide-tip">
+    <strong>Tips for best results:</strong><br>
+    <strong>Front:</strong> Face camera straight on, neutral expression, even lighting, hair back.<br>
+    <strong>Side:</strong> Turn 90°, keep chin level, show jaw and nose profile clearly.<br>
+    Retake every 4-6 weeks to track changes from your health improvements.
+  </div>`;
+}
+
+function handleSidePhoto(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const pslData=getPSLData();
+    if(!pslData.sidePhotos)pslData.sidePhotos=[];
+    // Resize to thumbnail to save localStorage space
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const maxDim=200;
+      const scale=Math.min(maxDim/img.width,maxDim/img.height,1);
+      canvas.width=img.width*scale;canvas.height=img.height*scale;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      const thumb=canvas.toDataURL('image/jpeg',0.7);
+      pslData.sidePhotos.push({date:TODAY(),img:thumb});
+      D.psl=pslData;save();
+      toast('Side profile saved! 📐');render();
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPhotos(){
+  if(!confirm('Delete all saved photos from gallery?'))return;
+  const pslData=getPSLData();
+  pslData.frontPhotos=[];pslData.sidePhotos=[];
+  D.psl=pslData;save();toast('Photos cleared');render();
+}
+
+async function handlePSLPhoto(input,photoType){
+  const file=input.files[0];
+  if(!file)return;
+  if(pslAnalyzing)return;
+  pslAnalyzing=true;
+
+  const area=document.getElementById('pslAnalysisArea');
+  area.innerHTML=`
+  <div class="card" style="text-align:center;padding:30px">
+    <div style="font-size:24px;margin-bottom:8px">🔍</div>
+    <div style="font-size:14px;font-weight:600;color:var(--green2)" id="pslStatus">Loading AI models...</div>
+    <div class="xp-bar-bg" style="margin-top:12px;height:8px"><div class="xp-bar-fill" id="pslProgress" style="width:20%;transition:width .5s"></div></div>
+  </div>`;
+
+  const loaded=await loadPSLModels();
+  if(!loaded){
+    area.innerHTML=`<div class="card" style="text-align:center;padding:20px;color:var(--red)">Failed to load AI models. Check your internet connection and try again.</div>`;
+    pslAnalyzing=false;return;
+  }
+  document.getElementById('pslStatus').textContent='Analyzing your face...';
+  document.getElementById('pslProgress').style.width='50%';
+
+  const img=new Image();
+  img.onload=async()=>{
+    try{
+      // Create canvas and draw image
+      const canvas=document.createElement('canvas');
+      const maxDim=640;
+      const scale=Math.min(maxDim/img.width,maxDim/img.height,1);
+      canvas.width=img.width*scale;
+      canvas.height=img.height*scale;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+      document.getElementById('pslProgress').style.width='70%';
+
+      // Detect face and landmarks
+      const detection=await faceapi.detectSingleFace(canvas,new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:0.4})).withFaceLandmarks();
+
+      if(!detection){
+        area.innerHTML=`<div class="card" style="text-align:center;padding:20px">
+          <div style="font-size:24px;margin-bottom:8px">😕</div>
+          <div style="font-size:14px;color:var(--text2)">No face detected. Make sure your face is clearly visible, well-lit, and front-facing. Try another photo.</div>
+        </div>`;
+        pslAnalyzing=false;return;
+      }
+
+      document.getElementById('pslProgress').style.width='90%';
+
+      // Analyze
+      const result=analyzeFace(detection.landmarks);
+      const tier=getPSLTier(result.psl);
+      const imps=getMetricImprovements(result.metrics);
+
+      // Draw landmarks on photo
+      const displayCanvas=document.createElement('canvas');
+      displayCanvas.width=canvas.width;displayCanvas.height=canvas.height;
+      const dctx=displayCanvas.getContext('2d');
+      dctx.drawImage(canvas,0,0);
+
+      // Draw landmark points
+      const pts=result.landmarks;
+      dctx.fillStyle='rgba(0,230,118,0.6)';
+      pts.forEach(p=>{dctx.beginPath();dctx.arc(p.x*scale,p.y*scale,2,0,Math.PI*2);dctx.fill()});
+
+      // Draw key measurement lines
+      dctx.strokeStyle='rgba(0,230,118,0.4)';dctx.lineWidth=1;dctx.setLineDash([4,4]);
+      // FWHR width line
+      dctx.beginPath();dctx.moveTo(pts[1].x*scale,pts[1].y*scale);dctx.lineTo(pts[15].x*scale,pts[15].y*scale);dctx.stroke();
+      // Jaw line
+      for(let i=0;i<16;i++){if(i===0){dctx.beginPath();dctx.moveTo(pts[i].x*scale,pts[i].y*scale)}else dctx.lineTo(pts[i].x*scale,pts[i].y*scale)}
+      dctx.strokeStyle='rgba(255,214,0,0.4)';dctx.stroke();
+      // Symmetry center line
+      dctx.strokeStyle='rgba(68,138,255,0.3)';dctx.beginPath();
+      const cx=(pts[27].x+pts[8].x)/2*scale;
+      dctx.moveTo(cx,pts[27].y*scale-20);dctx.lineTo(cx,pts[8].y*scale+10);dctx.stroke();
+      dctx.setLineDash([]);
+
+      const imgDataUrl=displayCanvas.toDataURL('image/jpeg',0.9);
+
+      // Save front profile thumbnail
+      if(photoType==='front'){
+        const thumbCanvas=document.createElement('canvas');
+        const thumbScale=Math.min(200/img.width,200/img.height,1);
+        thumbCanvas.width=img.width*thumbScale;thumbCanvas.height=img.height*thumbScale;
+        const tctx=thumbCanvas.getContext('2d');
+        tctx.drawImage(img,0,0,thumbCanvas.width,thumbCanvas.height);
+        window._lastFrontThumb=thumbCanvas.toDataURL('image/jpeg',0.7);
+      }
+
+      // Store for save button
+      window._lastPSLResult={psl:result.psl,metrics:result.metrics};
+
+      // Render results
+      area.innerHTML=`
+      <div class="card" style="padding:16px;text-align:center">
+        <img src="${imgDataUrl}" style="width:100%;max-width:400px;border-radius:12px;border:2px solid var(--border);margin-bottom:16px">
+        <div class="psl-score-display">
+          <div class="psl-score-big" style="color:${tier.c}">${result.psl}</div>
+          <div class="psl-score-label">PSL Score</div>
+          <div class="psl-tier" style="color:${tier.c};background:${tier.bg}">${tier.n}</div>
+        </div>
+        <div style="margin-top:14px"><button class="btn btn-gold" onclick="savePSLResult()">Save Analysis (+40 XP)</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📐 Measurements <span class="card-subtitle">68-point analysis</span></div>
+        ${Object.entries(result.metrics).map(([k,m])=>{
+          const color=m.score>=80?'var(--green)':m.score>=50?'var(--gold)':m.score>=30?'var(--orange)':'var(--red)';
+          return `<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+              <span style="font-weight:600">${m.name}</span>
+              <span style="color:${color};font-weight:700">${m.value}</span>
+            </div>
+            <div class="psl-meter"><div class="psl-meter-fill" style="width:${m.score}%;background:${color}"></div></div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Ideal: ${m.ideal}</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      ${imps.length>0?`
+      <div class="card">
+        <div class="card-title">🎯 Improvement Plan <span class="card-subtitle">Based on your weakest metrics</span></div>
+        ${imps.map(imp=>{
+          const priColor=imp.pri==='HIGH'?'var(--red)':imp.pri==='MED'?'var(--gold)':'var(--text3)';
+          const priBg=imp.pri==='HIGH'?'rgba(255,23,68,.15)':imp.pri==='MED'?'rgba(255,214,0,.15)':'rgba(150,150,150,.1)';
+          return `<div class="psl-improve">
+            <div class="psl-improve-head">
+              <span class="psl-improve-pri" style="color:${priColor};background:${priBg}">${imp.pri}</span>
+              <span class="psl-improve-title">${imp.t}</span>
+            </div>
+            <div class="psl-improve-body">${imp.b}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:4px">For: ${imp.metric} (score: ${Math.round(imp.score)}%)</div>
+          </div>`;
+        }).join('')}
+      </div>`:''}`;
+
+      pslAnalyzing=false;
+    }catch(e){
+      console.error('Analysis error:',e);
+      area.innerHTML=`<div class="card" style="text-align:center;padding:20px;color:var(--red)">Analysis error: ${e.message}. Try a different photo.</div>`;
+      pslAnalyzing=false;
+    }
+  };
+  img.onerror=()=>{
+    area.innerHTML=`<div class="card" style="text-align:center;padding:20px;color:var(--red)">Could not load image. Try a different photo.</div>`;
+    pslAnalyzing=false;
+  };
+  img.src=URL.createObjectURL(file);
+}
+
+function savePSLResult(){
+  if(!window._lastPSLResult){toast('Analyze a photo first!');return}
+  const{psl,metrics}=window._lastPSLResult;
+  const pslData=getPSLData();
+  pslData.assessments.push({date:TODAY(),psl,metrics});
+  // Save front profile thumbnail to gallery
+  if(window._lastFrontThumb){
+    if(!pslData.frontPhotos)pslData.frontPhotos=[];
+    pslData.frontPhotos.push({date:TODAY(),img:window._lastFrontThumb});
+    window._lastFrontThumb=null;
+  }
+  D.psl=pslData;
+  addXP(40);save();
+  toast(`PSL ${psl} saved! +40 XP 📸`);
+  window._lastPSLResult=null;
+  render();
+}
+
+function bindPSL(){/* photo upload handles its own events */}
+
+// ====== INIT ======
+renderNav();render();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
